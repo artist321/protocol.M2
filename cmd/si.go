@@ -12,13 +12,14 @@ import (
 // siCmd represents the si command
 var siCmd = &cobra.Command{
 	Use:   "si",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Интерфейс для работы с разделом Утверждённые типы средств измерений (ФИФ)",
+	Long: `Интерфейс для работы с разделом Утверждённые типы средств измерений (ФИФ)
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+-f -- обновление всей базы из ФИФ
+-new -- обновление только последний 200 номеров ГРСИ
+-init -- инициализация локальной базы ГРСИ
+
+`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("si called")
 	},
