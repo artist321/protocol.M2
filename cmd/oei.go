@@ -24,7 +24,7 @@ var oeiCmd = &cobra.Command{
 	Short: "Интерфейс для работы с oei-analitika.ru",
 	Long: `Интерфейс для работы с oei-analitika.ru
 
--new -- обновление файлов из раздела Полезные документы
+--new, -n -- обновление файлов из раздела Полезные документы
 `,
 	Run: func(cmd *cobra.Command, args []string) {
 		ScrapFilesFromOEI()

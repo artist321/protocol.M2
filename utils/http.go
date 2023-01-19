@@ -1,3 +1,6 @@
+/*
+Copyright © 2023 Artem Demchenko a.a.demchenko@yandex.com
+*/
 package utils
 
 import (
