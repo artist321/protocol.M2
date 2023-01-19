@@ -1,10 +1,9 @@
 /*
 Copyright © 2023 Artem Demchenko a.a.demchenko@yandex.com
-
 */
 package main
 
-import "github.com/spf13/myapp/cmd"
+import "protocol.M2/cmd"
 
 func main() {
 	cmd.Execute()
