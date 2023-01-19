@@ -9,14 +9,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var buildVer = "b0.1"
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "protocol.M2",
 	Short: "Многофункциональная программа для метрологов",
-	Long: `Ничего НЕ ГАРАНТИРУЕТСЯ, в пределах, ограниченных законом.
+	Long: `Многофункциональная программа для метрологов Protocol.M2
+
+Ничего НЕ ГАРАНТИРУЕТСЯ, в пределах, ограниченных законом.
 
 Сообщения об ошибках и вопросы отправляйте на <a.a.demchenko@yandex.com>
-Чтобы узнать как пользоваться программой, введите:	protocol.M2 help`,
+Чтобы узнать как пользоваться программой, введите:	protocol.M2 help
+Версия: ` + buildVer,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
