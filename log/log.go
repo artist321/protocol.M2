@@ -19,8 +19,6 @@ func init() {
 		logrus.Error("Ошибка создания logfile" + flog)
 		panic(err)
 	}
-	defer f.Close()
-
 	Log = &logrus.Logger{
 		// Log into f file handler and on os.Stdout
 		Out:   io.MultiWriter(f, os.Stdout),
@@ -31,5 +29,6 @@ func init() {
 			LogFormat:       "[%lvl%]: %time% - %msg%\n",
 		},
 	}
-	Log.Println()
+	defer f.Close()
+	//Log.Println()
 }
