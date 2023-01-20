@@ -48,7 +48,7 @@ func init() {
 func ScrapFilesFromOEI() {
 	var noticeFmt = color.New(color.FgGreen).PrintlnFunc()
 	noticeFmt("[oei-analitika] Старт.")
-	var urls, p0 []string
+	var urls, files []string
 	fName := "OEI-A-RE_data.csv"
 	fn := ""
 	link := ""
@@ -64,7 +64,7 @@ func ScrapFilesFromOEI() {
 	w.Comma = ';'
 	defer w.Flush()
 	c := colly.NewCollector(
-		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"),
+		colly.UserAgent(utils.UserAgent),
 		//colly.Async(false),
 	)
 	c.OnRequest(
@@ -148,15 +148,14 @@ func ScrapFilesFromOEI() {
 							}
 						}
 					}
-					//fmt.Println(el.ChildText("td:nth-child(3)"))
+					log.Log.Debugln(el.ChildText("td:nth-child(3)"))
 
 					link = fmt.Sprintf("http://oei-analitika.ru/kurilka/%s", link)
 					ext := filepath.Ext(link)
 					urls = append(urls, link)
 
 					p := path.Join("OEI", strings.ReplaceAll(fmt.Sprintf("%s%s", fn, ext), "/", "_"))
-					p0 = append(p0, p)
-					//DownloadFileFromFif(link, p)
+					files = append(files, p)
 					//time.Sleep(333 * time.Millisecond)
 				},
 			)
@@ -166,22 +165,20 @@ func ScrapFilesFromOEI() {
 	noticeFmt("загружаю данные...")
 	c.OnError(
 		func(r *colly.Response, err error) {
-			log.Log.Info("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+			log.Log.Error("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
 		},
 	)
 	c.Visit(fmt.Sprintf("http://oei-analitika.ru/kurilka/reestr_good_docs.php"))
 	w.Flush()
+	noticeFmt("[oei-analitika] скачиваем.")
+
 	for i := len(urls) - 1; i >= 0; i-- {
-		err := utils.DownloadFile(urls[i], p0[i])
+		err := utils.DownloadFile(urls[i], files[i])
 		if err != nil {
 			log.Log.Error(err)
 			continue
 		}
 		//fmt.Println(urls[i])
 	}
-
-	//noticeFmt("[oei-analitika] скачиваем.")
-	//MultiDownloader(urls)
-
 	noticeFmt("[oei-analitika] Выполнено.")
 }
