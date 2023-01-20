@@ -8,12 +8,12 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/gocolly/colly/v2"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	//"log"
 	"os"
 	"path"
 	"path/filepath"
-	"protocol.M2/log"
+	//"protocol.M2/log"
 	"protocol.M2/utils"
 	"strings"
 )
@@ -55,7 +55,7 @@ func ScrapFilesFromOEI() {
 
 	f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		log.Log.Error("Файл cvs не создан, ошибка: %q", err)
+		log.Error("Файл cvs не создан, ошибка: %q", err)
 		return
 	}
 	defer f.Close()
@@ -148,7 +148,7 @@ func ScrapFilesFromOEI() {
 							}
 						}
 					}
-					log.Log.Debugln(el.ChildText("td:nth-child(3)"))
+					log.Debugln(el.ChildText("td:nth-child(3)"))
 
 					link = fmt.Sprintf("http://oei-analitika.ru/kurilka/%s", link)
 					ext := filepath.Ext(link)
@@ -165,7 +165,7 @@ func ScrapFilesFromOEI() {
 	noticeFmt("загружаю данные...")
 	c.OnError(
 		func(r *colly.Response, err error) {
-			log.Log.Error("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+			log.Error("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
 		},
 	)
 	c.Visit(fmt.Sprintf("http://oei-analitika.ru/kurilka/reestr_good_docs.php"))
@@ -175,7 +175,7 @@ func ScrapFilesFromOEI() {
 	for i := len(urls) - 1; i >= 0; i-- {
 		err := utils.DownloadFile(urls[i], files[i])
 		if err != nil {
-			log.Log.Error(err)
+			log.Error(err)
 			continue
 		}
 		//fmt.Println(urls[i])
