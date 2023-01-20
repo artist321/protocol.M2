@@ -9,7 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var version = "b0.1"
+var (
+	Version string
+	Build   string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -21,7 +24,7 @@ var rootCmd = &cobra.Command{
 
 Сообщения об ошибках и вопросы отправляйте на <a.a.demchenko@yandex.com>
 Чтобы узнать как пользоваться программой, введите:	protocol.M2 help
-Версия: ` + version,
+Версия: ` + Version + Build,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	Run: func(cmd *cobra.Command, args []string) {
