@@ -16,3 +16,23 @@ func IsExist(path string) bool {
 	//log.Println(filepath.Join(path), "[?] Что я здесь делаю?")
 	return false
 }
+
+// EnsureMakeDir гарантированное создание вложенных каталогов на диске
+func EnsureMakeDir(fileName string) error {
+
+	if _, serr := os.Stat(fileName); serr != nil {
+		err := os.MkdirAll(fileName, os.ModePerm) //err := os.MkdirAll(dirName, os.ModePerm)
+		if os.IsExist(err) {
+			//log.Println("[i] Папка уже существует")
+			return nil
+		}
+		if err == nil {
+			//log.Println("[i] Папка создана")
+			return nil
+		} else {
+			//log.Errorln("error folder creating", err)
+			return err
+		}
+	}
+	return nil
+}

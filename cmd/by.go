@@ -8,10 +8,11 @@ import (
 	"fmt"
 	"github.com/fatih/color"
 	"github.com/gocolly/colly/v2"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"os"
 	"path"
-	"protocol.M2/log"
+	//"protocol.M2/log"
 	"protocol.M2/utils"
 	"strconv"
 	"time"
@@ -50,13 +51,16 @@ func ScrapByGRSI() {
 	fName := "ByGRSI_data.csv"
 	file, err := os.OpenFile(fName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Log.Fatalf("Файл csv не создан, ошибка: %q", err)
+		log.Fatalf("Файл csv не создан, ошибка: %q", err)
 		return
 	}
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
+
+	// make dir for Bel.GRSI files
+	utils.EnsureMakeDir(path.Join(utils.RootDir, "ByGRSI"))
 
 	for i := 1; i < 441; i++ {
 		c := colly.NewCollector()
@@ -101,7 +105,7 @@ func ScrapByGRSIInner(i int) {
 	fName := "ByGRSI_data_si.csv"
 	file, err := os.Create(fName)
 	if err != nil {
-		log.Log.Fatalf("Файл не создан, ошибка: %q", err)
+		log.Fatalf("Файл не создан, ошибка: %q", err)
 		return
 	}
 	defer file.Close()
@@ -126,7 +130,7 @@ func ScrapByGRSIInner(i int) {
 								//fmt.Println(em.Text)
 								err := utils.DownloadFile(em.Attr("href"), path.Join("ByGRSI", em.Text))
 								if err != nil {
-									log.Log.Error(err)
+									log.Error(err)
 								}
 							},
 						)
@@ -137,7 +141,7 @@ func ScrapByGRSIInner(i int) {
 						},
 					)
 					if err != nil {
-						log.Log.Fatalf("ошибка writer.Write: %q", err)
+						log.Fatalf("ошибка writer.Write: %q", err)
 						return
 					}
 				},
@@ -156,7 +160,7 @@ func ScrapByGRSIInner(i int) {
 	//})
 	err = c.Visit(fmt.Sprintf("https://www.oei.by/grsi/view?id=%d", i))
 	if err != nil {
-		log.Log.Error(err)
+		log.Error(err)
 	}
 	time.Sleep(0 * time.Millisecond)
 }

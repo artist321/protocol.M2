@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/schollz/progressbar/v3"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"mime"
 	"net"
 	"net/http"
 	"os"
 	"path"
-	"protocol.M2/log"
 	"strconv"
 	"strings"
 	"time"
@@ -27,7 +26,6 @@ var RootDir = "."
 var RetClient = retryablehttp.NewClient()
 
 var CustomHTTPClient = &http.Client{
-
 	Transport: &http.Transport{
 		DisableKeepAlives: true,
 		//// If you do have a proxy
@@ -51,14 +49,14 @@ var CustomHTTPClient = &http.Client{
 func DownloadFile(url string, fn string) (err error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Log.Error("error http request no init", err)
+		log.Error("error http request no init", err)
 
 		return errors.New(fmt.Sprintf("download error: http request no init"))
 	}
 	setHeader(req)
 	retryReq, err := retryablehttp.FromRequest(req)
 	if err != nil {
-		log.Log.Error("error http retry request no init", err)
+		log.Error("error http retry request no init", err)
 		return errors.New(fmt.Sprintf("download error: http request no init"))
 	}
 	RetClient.HTTPClient = CustomHTTPClient
@@ -67,14 +65,14 @@ func DownloadFile(url string, fn string) (err error) {
 	RetClient.Logger = nil
 	resp, err := RetClient.Do(retryReq)
 	if err != nil {
-		log.Log.Error("error http retry request no complete", err)
+		log.Error("error http retry request no complete", err)
 		return errors.New(fmt.Sprintf("download error: http retry request no complete"))
 
 	}
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		log.Log.Error("server receive status", resp.Status, fn)
+		log.Error("server receive status", resp.Status, fn)
 		//err := errors.New(fmt.Sprintf("download error: %s", resp.Status))
 		//return err
 		// exit if not ok
@@ -84,21 +82,21 @@ func DownloadFile(url string, fn string) (err error) {
 	// the total file size to download
 	size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 	if size == 0 {
-		log.Log.Error("file size is null", fn)
+		log.Error("file size is null", fn)
 		//err := errors.New("download error: file size is null")
 		//return err
 	}
 
-	if log.Log.GetLevel() == logrus.DebugLevel {
-		log.Log.Debugln(url)
-		log.Log.Debugln("Content-Disposition: " + resp.Header.Get("Content-Disposition"))
-		log.Log.Debugln("Content-Length: " + strconv.Itoa(size))
+	if log.GetLevel() == log.DebugLevel {
+		log.Debugln(url)
+		log.Debugln("Content-Disposition: " + resp.Header.Get("Content-Disposition"))
+		log.Debugln("Content-Length: " + strconv.Itoa(size))
 		_, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
 		fn = strings.Replace(params["filename"], "+", "_", -1)
 		if fn == "" {
-			log.Log.Debugln("DownloadFile: 'filename' has no name")
+			log.Debugln("DownloadFile: 'filename' has no name")
 		} else {
-			log.Log.Debugln("DownloadFile: 'filename' name is " + fn)
+			log.Debugln("DownloadFile: 'filename' name is " + fn)
 		}
 	}
 
@@ -109,7 +107,7 @@ func DownloadFile(url string, fn string) (err error) {
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
 			if err != nil {
-				log.Log.Errorln(fmt.Errorf("%s", err))
+				log.Errorln(fmt.Errorf("%s", err))
 			}
 		}(resp.Body)
 	}
@@ -121,7 +119,7 @@ func DownloadFile(url string, fn string) (err error) {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			log.Log.Errorln(fmt.Errorf("%s", err))
+			log.Errorln(fmt.Errorf("%s", err))
 		}
 	}(resp.Body)
 
@@ -133,19 +131,19 @@ func DownloadFile(url string, fn string) (err error) {
 		defer func(out *os.File) {
 			err := out.Close()
 			if err != nil {
-				log.Log.Errorln(fmt.Errorf("%s", err))
+				log.Errorln(fmt.Errorf("%s", err))
 			}
 		}(out)
 		_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
 		if err != nil {
-			log.Log.Errorln(fmt.Errorf("%s", err))
+			log.Errorln(fmt.Errorf("%s", err))
 			return err
 		}
 	} else {
 		//if isFileSameSize(path.Join(PathSI, filename), getSize(resp.Body) {
 		//	log.Fatal("[E] Такой же файл уже существует")
 		//}
-		log.Log.Infoln(" Файл уже существует")
+		log.Infoln(" Файл уже существует")
 	}
 	return nil
 }
