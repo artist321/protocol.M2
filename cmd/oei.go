@@ -63,6 +63,10 @@ func ScrapFilesFromOEI() {
 	w := csv.NewWriter(f)
 	w.Comma = ';'
 	defer w.Flush()
+
+	// make dir for Bel.GRSI files
+	utils.EnsureMakeDir(path.Join(utils.RootDir, "OEI"))
+
 	c := colly.NewCollector(
 		colly.UserAgent(utils.UserAgent),
 		//colly.Async(false),
