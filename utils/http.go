@@ -23,7 +23,7 @@ import (
 
 const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
 
-var PathSI = "."
+var RootDir = "."
 var RetClient = retryablehttp.NewClient()
 
 var CustomHTTPClient = &http.Client{
@@ -125,8 +125,8 @@ func DownloadFile(url string, fn string) (err error) {
 		}
 	}(resp.Body)
 
-	if !IsExist(path.Join(PathSI, fn)) {
-		out, err := os.Create(path.Join(PathSI, fn))
+	if !IsExist(path.Join(RootDir, fn)) {
+		out, err := os.Create(path.Join(RootDir, fn))
 		if err != nil {
 			return err
 		}
