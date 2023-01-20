@@ -6,6 +6,7 @@ require (
 	github.com/fatih/color v1.13.0
 	github.com/gocolly/colly/v2 v2.1.0
 	github.com/hashicorp/go-retryablehttp v0.7.2
+	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
 	github.com/schollz/progressbar/v3 v3.13.0
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
