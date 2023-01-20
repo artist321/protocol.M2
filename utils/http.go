@@ -21,6 +21,8 @@ import (
 	"time"
 )
 
+const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
+
 var PathSI = "."
 var RetClient = retryablehttp.NewClient()
 
@@ -157,7 +159,7 @@ func setHeader(req *http.Request) {
 	s := t.Format(http.TimeFormat)
 	//log.Println(t.UTC().Format(time.RFC1123))
 	//log.Println(s)
-	req.Header.Set("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:108.0) Gecko/20100101 Firefox/108.0")
+	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Add("Accept", "*/*")
 	req.Header.Add("Accept-Language", "ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3")
 	req.Header.Add("Accept-Charset", "utf-8")
