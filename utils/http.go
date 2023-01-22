@@ -143,6 +143,7 @@ func DownloadFile(url string, fn string) (err error) {
 		//if isFileSameSize(path.Join(PathSI, filename), getSize(resp.Body) {
 		//	log.Fatal("[E] Такой же файл уже существует")
 		//}
+		fmt.Println()
 		log.Infoln(" Файл уже существует")
 	}
 	return nil
