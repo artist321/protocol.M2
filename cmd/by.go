@@ -10,9 +10,10 @@ import (
 	"github.com/gocolly/colly/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"net"
+	"net/http"
 	"os"
 	"path"
-	//"protocol.M2/log"
 	"protocol.M2/utils"
 	"strconv"
 	"time"
@@ -27,7 +28,7 @@ var byCmd = &cobra.Command{
 --update, -u -- Обновление ГРСИ (Респ.Белорусь)
 `,
 	Run: func(cmd *cobra.Command, args []string) {
-		ScrapByGRSI()
+		ScrapBelGRSI()
 	},
 }
 
@@ -45,10 +46,10 @@ func init() {
 	// byCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
 
-func ScrapByGRSI() {
+func ScrapBelGRSI() {
 	var noticeFmt = color.New(color.FgGreen).PrintlnFunc()
-	noticeFmt("[by-grsi] Старт.")
-	fName := "ByGRSI_data.csv"
+	noticeFmt("[Belarus GRSI] Старт.")
+	fName := "BelGRSI_SI.csv"
 	file, err := os.OpenFile(fName, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatalf("Файл csv не создан, ошибка: %q", err)
@@ -60,18 +61,30 @@ func ScrapByGRSI() {
 	defer writer.Flush()
 
 	// make dir for Bel.GRSI files
-	utils.EnsureMakeDir(path.Join(utils.RootDir, "ByGRSI"))
+	utils.EnsureMakeDir(path.Join(utils.RootDir, "BelGRSI"))
 
 	for i := 1; i < 441; i++ {
 		c := colly.NewCollector()
+		c.WithTransport(
+			&http.Transport{
+				Proxy: http.ProxyFromEnvironment,
+				DialContext: (&net.Dialer{
+					Timeout:   30 * time.Second,
+					KeepAlive: 30 * time.Second,
+				}).DialContext,
+				MaxIdleConns:          100,
+				IdleConnTimeout:       90 * time.Second,
+				TLSHandshakeTimeout:   10 * time.Second,
+				ExpectContinueTimeout: 1 * time.Second,
+			},
+		)
 		c.OnHTML(
 			"div[id=w10-container]", func(e *colly.HTMLElement) {
 				e.ForEach(
 					"tr[class=w10]", func(_ int, el *colly.HTMLElement) {
 						//fmt.Println(el.Attr("data-key"))
-
 						y, _ := strconv.Atoi(el.Attr("data-key"))
-						ScrapByGRSIInner(y)
+						ScrapBelGRSIInner(y)
 						writer.Write(
 							[]string{
 								//el.ChildText("td:nth-child(1)"),
@@ -89,20 +102,20 @@ func ScrapByGRSI() {
 						)
 					},
 				)
-				fmt.Println(i, "Scrapping Complete")
+				fmt.Println(i, "Сканирование завершено")
 			},
 		)
 		c.Visit(fmt.Sprintf("https://www.oei.by/grsi/index?page=%d&per-page=100&sort=-grsi_date", i))
 		writer.Flush()
 		//time.Sleep(0 * time.Millisecond)
 	}
-	noticeFmt("[by-grsi] Выполнено.")
+	noticeFmt("[Belarus GRSI] Выполнено.")
 
 }
 
-func ScrapByGRSIInner(i int) {
+func ScrapBelGRSIInner(i int) {
 	//fmt.Printf("https://www.oei.by/grsi/view?id=%d\n", i)
-	fName := "ByGRSI_data_si.csv"
+	fName := "BelGRSI_data_si.csv"
 	file, err := os.Create(fName)
 	if err != nil {
 		log.Fatalf("Файл не создан, ошибка: %q", err)
@@ -128,7 +141,7 @@ func ScrapByGRSIInner(i int) {
 								//fmt.Println("h", em.Attr("href"))
 								//fmt.Println("t", em.Text)
 								//fmt.Println(em.Text)
-								err := utils.DownloadFile(em.Attr("href"), path.Join("ByGRSI", em.Text))
+								err := utils.DownloadFile(em.Attr("href"), path.Join("BelGRSI", em.Text))
 								if err != nil {
 									log.Error(err)
 								}
@@ -149,15 +162,6 @@ func ScrapByGRSIInner(i int) {
 			//fmt.Println(i, "Scrapping Complete")
 		},
 	)
-	//c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-	//	link := e.Attr("href")
-	//	if !strings.HasPrefix(link, "http://media.belgim.by/grsi/") {
-	//		return
-	//	}
-	//	//DownloadFileFromFif(link)
-	//	// start scraping the page under the link found
-	//	e.Request.Visit(link)
-	//})
 	err = c.Visit(fmt.Sprintf("https://www.oei.by/grsi/view?id=%d", i))
 	if err != nil {
 		log.Error(err)
