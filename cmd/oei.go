@@ -10,8 +10,6 @@ import (
 	"github.com/gocolly/colly/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	easy "github.com/t-tomalak/logrus-easy-formatter"
-	"io"
 	"net"
 	"net/http"
 	"os"
@@ -23,8 +21,6 @@ import (
 	"protocol.M2/utils"
 	"strings"
 )
-
-var logname = "protocol.M2.log"
 
 // oeiCmd represents the oei command
 var oeiCmd = &cobra.Command{
@@ -54,23 +50,6 @@ func init() {
 }
 
 func ScrapFilesFromOEI() {
-	// логирование ошибок  в файл
-	flog, err := os.OpenFile(logname, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		log.Error("Ошибка создания logfile" + logname)
-		panic(err)
-	}
-	Log := &log.Logger{
-		// Log into f file handler and on os.Stdout
-		Out:   io.MultiWriter(flog, os.Stdout),
-		Level: log.DebugLevel, //InfoLevel
-
-		Formatter: &easy.Formatter{
-			TimestampFormat: "2006-01-02 15:04:05",
-			LogFormat:       "[%lvl%]: %time% - %msg%\n",
-		},
-	}
-	defer flog.Close()
 
 	var noticeFmt = color.New(color.FgGreen).PrintlnFunc()
 	noticeFmt("[oei-analitika] Старт.")
@@ -81,7 +60,7 @@ func ScrapFilesFromOEI() {
 
 	f, err := os.OpenFile(fName, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		Log.Error("Файл cvs не создан, ошибка: %q", err)
+		log.Error("Файл cvs не создан, ошибка: %q", err)
 		return
 	}
 	defer f.Close()
@@ -208,7 +187,7 @@ func ScrapFilesFromOEI() {
 	noticeFmt("загружаю данные...")
 	c.OnError(
 		func(r *colly.Response, err error) {
-			Log.Error("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
+			log.Error("Request URL:", r.Request.URL, "failed with response:", r, "\nError:", err)
 		},
 	)
 	c.Visit(fmt.Sprintf("http://oei-analitika.ru/kurilka/reestr_good_docs.php"))
@@ -218,7 +197,7 @@ func ScrapFilesFromOEI() {
 	for i := len(urls) - 1; i >= 0; i-- {
 		err := utils.DownloadFile(urls[i], files[i])
 		if err != nil {
-			Log.Error(err)
+			log.Error(err)
 			continue
 		}
 		//fmt.Println(urls[i])
