@@ -69,7 +69,7 @@ func ScrapFilesFromOEI() {
 	w.Comma = ';'
 	defer w.Flush()
 
-	// make dir for Bel.GRSI files
+	// make dir for OEI-analitika files
 	utils.EnsureMakeDir(path.Join(utils.RootDir, "OEI"))
 
 	c := colly.NewCollector(
@@ -195,11 +195,81 @@ func ScrapFilesFromOEI() {
 	noticeFmt("[oei-analitika] скачиваем.")
 
 	for i := len(urls) - 1; i >= 0; i-- {
-		err := utils.DownloadFile(urls[i], files[i])
+
+		//partcount := 1
+		//pc := int64(partcount)
+
+		c, _ := utils.GetSize(urls[i])
+		c0, err := os.Stat(files[i])
+		if err == nil {
+			//fmt.Println(c, c0.Size())
+			if utils.IsExist(urls[i]) && (c == c0.Size()) {
+				//fmt.Println(c, c0.Size())
+				continue
+			}
+		}
+
+		//f, err := utils.CreateSafeFile(files[i])
+		//if err != nil {
+		//	log.Error(err)
+		//	continue
+		//}
+		//defer f.Close()
+		//f.Truncate(c)
+		//ps := c / pc
+		//wp := monitor.WorkerPool{}
+		//for j := int64(0); j < pc-1; j++ {
+		//	//log.Println(ps*i, ps*i+ps)
+		//	d := httpclient.CreatePartialDownloader(urls[i], f, ps*j, ps*j, ps*j+ps)
+		//	mv := monitor.Monitor{Itw: d}
+		//	wp.AppendWork(&mv)
+		//}
+		//lastseg := c - (ps * (pc - 1))
+		//dow := httpclient.CreatePartialDownloader(urls[i], f, lastseg, lastseg, c)
+		//mv := monitor.Monitor{Itw: dow}
+		//wp.AppendWork(&mv)
+		//
+		//errs := wp.StartAll()
+		//if len(errs) > 1 {
+		//	//f.Close()
+		//	continue
+		//}
+
+		//f.Close()
+
+		//dl, err := httpclient.CreateDownloader(urls[i], files[i], 0)
+		//if err != nil {
+		//	log.Error("failed: can't create downloader")
+		//}
+		//errs := dl.StartAll()
+		//if len(errs) > 0 {
+		//	log.Error("failed: can't start downloader")
+		//}
+		//for {
+		//	time.Sleep(time.Millisecond * 500)
+		//	pr := dl.GetProgress()
+		//	done := true
+		//	for _, r := range pr {
+		//		log.Print((r.To - r.Pos) / 1024)
+		//	}
+		//	log.Println("_________________________________________________________________________")
+		//	for _, i := range pr {
+		//		if i.Pos != i.To {
+		//			done = false
+		//			break
+		//		}
+		//	}
+		//
+		//	if done {
+		//		break
+		//	}
+		//}
+		err = utils.DownloadFile(urls[i], files[i])
 		if err != nil {
 			log.Error(err)
 			continue
 		}
+		//time.Sleep(time.Second * 3)
 		//fmt.Println(urls[i])
 	}
 	noticeFmt("[oei-analitika] Выполнено.")
