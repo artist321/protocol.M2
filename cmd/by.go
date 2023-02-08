@@ -139,7 +139,7 @@ func ScrapBelGRSIInner(i int) {
 						el.ForEach(
 							"div.form-group > p > a", func(_ int, em *colly.HTMLElement) {
 								//fmt.Println("h", em.Attr("href"))
-								//fmt.Println("t", em.Text)
+								//fmt.Println("fname", em.Text)
 								//fmt.Println(em.Text)
 								err := utils.DownloadFile(em.Attr("href"), path.Join("BelGRSI", em.Text))
 								if err != nil {

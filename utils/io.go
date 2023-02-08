@@ -83,3 +83,16 @@ func CreateSafeFile(name string) (file *SafeFile, err error) {
 	f, err := os.OpenFile(name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	return &SafeFile{File: f}, err
 }
+
+func getFileSize(filepath string) (int64, error) {
+	var fileSize int64
+	fi, err := os.Stat(filepath)
+	if err != nil {
+		return fileSize, err
+	}
+	if fi.IsDir() {
+		return fileSize, nil
+	}
+	fileSize = fi.Size()
+	return fileSize, nil
+}
