@@ -22,7 +22,7 @@ import (
 
 const UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36"
 
-var RootDir = "."
+var RootDir = "/Volumes/D/Метрология/ci/grsi"
 var RetClient = retryablehttp.NewClient()
 
 var CustomHTTPClient = &http.Client{
@@ -47,17 +47,28 @@ var CustomHTTPClient = &http.Client{
 
 // DownloadFile скачивает файл по URL в папку
 func DownloadFile(url string, fn string) (err error) {
+	// TODO: make download continue
+	//existingFileSize, err := getFileSize(fn)
+	//if err != nil {
+	//	return err
+	//}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		log.Error("error http request no init", err)
-
-		return errors.New(fmt.Sprintf("download error: http request no init"))
+		return errors.New(fmt.Sprintf("download error: http request no init %s", err))
 	}
-	setHeader(req)
+	SetHeader(req)
+	// TODO: make download continue (part 2)
+	//if existingFileSize > 0 {
+	//	ch, err := CheckMultipart(url)
+	//	if ch {
+	//		req.Header.Set("Range", fmt.Sprintf("bytes=%v-", existingFileSize))
+	//	} else {
+	//		fmt.Println(err)
+	//	}
+	//}
 	retryReq, err := retryablehttp.FromRequest(req)
 	if err != nil {
-		log.Error("error http retry request no init", err)
-		return errors.New(fmt.Sprintf("download error: http request no init"))
+		return errors.New(fmt.Sprintf("download error: http request no init %s", err))
 	}
 	RetClient.HTTPClient = CustomHTTPClient
 	RetClient.RetryMax = 5
@@ -65,26 +76,19 @@ func DownloadFile(url string, fn string) (err error) {
 	RetClient.Logger = nil
 	resp, err := RetClient.Do(retryReq)
 	if err != nil {
-		log.Error("error http retry request no complete", err)
 		return errors.New(fmt.Sprintf("download error: http retry request no complete"))
-
 	}
 
 	// Check response status
 	if resp.StatusCode != http.StatusOK {
-		log.Error("server receive status", resp.Status, fn)
-		//err := errors.New(fmt.Sprintf("download error: %s", resp.Status))
-		//return err
-		// exit if not ok
+		return errors.New(fmt.Sprintf("download error: server receive status %s for %s", resp.Status, fn))
 	}
 
 	// the Header "Content-Length" will let us know
 	// the total file size to download
 	size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
 	if size == 0 {
-		log.Error("file size is null", fn)
-		//err := errors.New("download error: file size is null")
-		//return err
+		return errors.New("download error: file size is null")
 	}
 
 	if log.GetLevel() == log.DebugLevel {
@@ -92,17 +96,18 @@ func DownloadFile(url string, fn string) (err error) {
 		log.Debugln("Content-Disposition: " + resp.Header.Get("Content-Disposition"))
 		log.Debugln("Content-Length: " + strconv.Itoa(size))
 		_, params, _ := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
-		fn = strings.Replace(params["filename"], "+", "_", -1)
+		if params["filename"] != "" {
+			fn = strings.Replace(params["filename"], "+", "_", -1)
+		}
 		if fn == "" {
-			log.Debugln("DownloadFile: 'filename' has no name")
+			log.Error("DownloadFile: 'filename' has no name")
+			return err
 		} else {
 			log.Debugln("DownloadFile: 'filename' name is " + fn)
 		}
 	}
 
-	name := fn
-
-	bar := progressbar.DefaultBytes(resp.ContentLength, "Cкачиваю '"+name+"' ")
+	bar := progressbar.DefaultBytes(resp.ContentLength, time.Now().Format(time.Kitchen)+" Cкачиваю '"+fn+"' ")
 	if resp.Body != nil {
 		defer func(Body io.ReadCloser) {
 			err := Body.Close()
@@ -111,11 +116,7 @@ func DownloadFile(url string, fn string) (err error) {
 			}
 		}(resp.Body)
 	}
-	//
-	//body, readErr := ioutil.ReadAll(resp.Body)
-	//if readErr != nil {
-	//	log.Fatal(readErr)
-	//}
+
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
@@ -136,21 +137,16 @@ func DownloadFile(url string, fn string) (err error) {
 		}(out)
 		_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
 		if err != nil {
-			log.Errorln(fmt.Errorf("%s", err))
-			return err
+			return errors.New(fmt.Sprintf("download error: io.Copy: %s", err))
 		}
 	} else {
-		//if isFileSameSize(path.Join(PathSI, filename), getSize(resp.Body) {
-		//	log.Fatal("[E] Такой же файл уже существует")
-		//}
-		fmt.Println()
 		log.Infoln(" Файл уже существует")
 	}
 	return nil
 }
 
-// setHeader set header for http client
-func setHeader(req *http.Request) {
+// SetHeader set header for http client
+func SetHeader(req *http.Request) {
 	//var t time.Time
 	gmtTimeLoc := time.FixedZone("GMT", 0)
 	t := time.Date(2016, time.July, 18, 02, 26, 04, 0, gmtTimeLoc)
@@ -171,4 +167,95 @@ func setHeader(req *http.Request) {
 			"REGISTRY_SETTINGS=%5B%5D; JSESSIONID=1E0CCE5FB8C83F7551106BE9BBFC2C75",
 	)
 	req.Header.Add("Last-Modified", s)
+}
+
+// GetArshinHTTPData get data from site in raw mode
+// with setting up (header, transport, timeouts) client
+func GetArshinHTTPData(url string) ([]byte, error) {
+	log.Debugln(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatalln("error http request init", err)
+		return nil, err
+	}
+	SetHeader(req)
+	retryReq, err := retryablehttp.FromRequest(req)
+	if err != nil {
+		log.Fatalln("error http retry request init from req", err)
+		return nil, err
+	}
+	RetClient.HTTPClient = CustomHTTPClient
+	RetClient.RetryMax = 5
+	RetClient.ErrorHandler = retryablehttp.PassthroughErrorHandler
+	RetClient.Logger = nil
+	resp, err := RetClient.Do(retryReq)
+	if err != nil {
+		log.Fatalln("error http request no complete", err)
+		return nil, err
+	}
+	size, _ := strconv.Atoi(resp.Header.Get("Content-Length"))
+	log.Debugln("Content-Length: " + resp.Header.Get("Content-Length"))
+
+	if size == 0 {
+		log.Debugln("Content-Length: 0")
+		//return 2
+	}
+
+	if resp.Body != nil {
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+
+			}
+		}(resp.Body)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal("io.ReadAll(resp.Body) ", err, resp.Body)
+		return nil, err
+	}
+	// people1 := people{}
+	// jsonErr := json.Unmarshal(body, &people1)
+	// if jsonErr != nil {
+	//	log.Fatal(jsonErr)
+	// }
+	return body, nil
+}
+
+func CheckMultipart(urls string) (bool, error) {
+	r, err := http.NewRequest("GET", urls, nil)
+	if err != nil {
+		return false, err
+	}
+	r.Header.Add("Range", "bytes=0-0")
+	cl := http.Client{}
+	resp, err := cl.Do(r)
+	if err != nil {
+		log.Error(" can't check multipart support assume no %v \n", err)
+		return false, err
+	}
+	if resp.StatusCode != 206 {
+		return false, errors.New("file not found or moved status: " + resp.Status)
+	}
+	if resp.ContentLength == 1 {
+		log.Info("multipart download support \n")
+		return true, nil
+	}
+	return false, nil
+}
+
+func GetSize(urls string) (int64, error) {
+	cl := http.Client{}
+	resp, err := cl.Head(urls)
+	if err != nil {
+		log.Error("when try get file size %v \n", err)
+		return 0, err
+	}
+	if resp.StatusCode != 200 {
+		log.Error("file not found or moved status:", resp.StatusCode)
+		return 0, errors.New("file not found or moved")
+	}
+	//log.Printf("file size is %d bytes \n", resp.ContentLength)
+	return resp.ContentLength, nil
 }
