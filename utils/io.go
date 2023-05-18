@@ -84,7 +84,7 @@ func CreateSafeFile(name string) (file *SafeFile, err error) {
 	return &SafeFile{File: f}, err
 }
 
-func getFileSize(filepath string) (int64, error) {
+func GetFileSize(filepath string) (int64, error) {
 	var fileSize int64
 	fi, err := os.Stat(filepath)
 	if err != nil {
@@ -95,4 +95,16 @@ func getFileSize(filepath string) (int64, error) {
 	}
 	fileSize = fi.Size()
 	return fileSize, nil
+}
+
+func CleanEOL(in string) string {
+	var out string
+
+	for _, char := range in {
+		if char != rune('\n') {
+			out = out + string(char)
+		}
+	}
+
+	return out
 }
